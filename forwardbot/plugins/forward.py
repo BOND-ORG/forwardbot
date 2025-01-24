@@ -37,9 +37,9 @@ async def handler(event):
             fromchannel = r.message.message.strip()
             if not r.is_reply:
                 await conv.send_message("Please send the message as a reply to the message.")
-            # else:
+            else:
             #     await conv.send_message("Okay now send me the channel id to where you want to forward messages as a reply to this message.")
-            #     break
+                break
         while True:
             # p = conv.wait_event(events.NewMessage(chats=event.chat_id))
             # p = await p
