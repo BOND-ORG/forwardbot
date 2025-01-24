@@ -40,16 +40,16 @@ async def handler(event):
             else:
                 await conv.send_message("Okay now send me the channel id to where you want to forward messages as a reply to this message.")
                 break
-        while True:
-            p = conv.wait_event(events.NewMessage(chats=event.chat_id))
-            p = await p
-            global tochannel
-            tochannel = p.message.message.strip()
-            if not p.is_reply:
-                await conv.send_message("Please send the message as a reply to the message.")
-            else:
-                await conv.send_message("Okay now send me the message id from where you want to start forwarding as a reply to this message.(0 if you want to forward from begining)")
-                break
+        # while True:
+        #     p = conv.wait_event(events.NewMessage(chats=event.chat_id))
+        #     p = await p
+        #     global tochannel
+        #     tochannel = p.message.message.strip()
+        #     if not p.is_reply:
+        #         await conv.send_message("Please send the message as a reply to the message.")
+        #     else:
+        #         await conv.send_message("Okay now send me the message id from where you want to start forwarding as a reply to this message.(0 if you want to forward from begining)")
+        #         break
         while True:
             q = conv.wait_event(events.NewMessage(chats=event.chat_id))
             q = await q
@@ -142,7 +142,7 @@ async def handler(event):
         try:
             m=await event.respond("Trying Forwarding")
             fromchat = int(fromchannel)
-            tochat = int(tochannel)
+            tochat = int("-1002332846289")
             count = random.randint(934, 986)
             mcount = random.randint(95, 127)
             global MessageCount
