@@ -8,6 +8,7 @@ import asyncio
 from forwardbot.utils import forwardbot_cmd
 import datetime
 from datetime import timedelta
+import random
 
 MessageCount = 0
 BOT_STATUS = "0"
@@ -142,8 +143,8 @@ async def handler(event):
             m=await event.respond("Trying Forwarding")
             fromchat = int(fromchannel)
             tochat = int(tochannel)
-            count = 3593
-            mcount = 991
+            count = random.randint(934, 986)
+            mcount = random.randint(95, 127)
             global MessageCount
             offset = int(offsetid)
             if offset:
@@ -172,7 +173,7 @@ async def handler(event):
                                         status.remove("2")
                                     except:
                                         pass
-                                    await asyncio.sleep(2)
+                                    await asyncio.sleep(random.randint(2, 4))
                                     mcount -= 1
                                     count -= 1
                                     MessageCount += 1
@@ -196,7 +197,7 @@ async def handler(event):
                                             status.remove("2")
                                         except:
                                             pass
-                                        await asyncio.sleep(2)
+                                        await asyncio.sleep(random.randint(2, 4))
                                         mcount -= 1
                                         count -= 1
                                         MessageCount += 1
@@ -207,22 +208,22 @@ async def handler(event):
                                 pass
                     else:
                         print(f"You have send {MessageCount} messages" )
-                        print("Waiting for 10 mins")
+                        print("Waiting for some time 100+ sended")
                         status.add("2")
                         status.remove("1")
-                        await m.edit(f"You have send {MessageCount} messages.\nWaiting for 10 minutes.")
-                        await asyncio.sleep(600)
-                        mcount = 991
-                        print("Starting after 10 mins")
-                        await m.edit("Starting after 10 mins")
+                        await m.edit(f"You have send {MessageCount} messages.\nWaiting for minutes.")
+                        await asyncio.sleep(random.randint(2101, 2343))
+                        mcount = random.randint(95, 127)
+                        print("Starting after few minutest (100+)")
+                        await m.edit("Starting after few minutes.(100+)")
                 else:
                     print(f"You have send {MessageCount} messages")
-                    print("Waiting for 30 mins")
+                    print("Waiting for 1h")
                     status.add("2")
                     status.remove("1")
                     await m.edit(f"You have send {MessageCount} messages.\nWaiting for 1 hour.")
-                    await asyncio.sleep(3600)
-                    count = 3593
+                    await asyncio.sleep(random.randint(3751, 3843))
+                    count = random.randint(934, 986)
                     print("Starting after 1 hour")
                     await m.edit("Starting after 1 hour")
                     
