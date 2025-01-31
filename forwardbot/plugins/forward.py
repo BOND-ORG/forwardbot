@@ -9,6 +9,7 @@ from forwardbot.utils import forwardbot_cmd
 import datetime
 from datetime import timedelta
 import random
+from itertools import islice
 
 MessageCount = 0
 BOT_STATUS = "0"
@@ -16,6 +17,15 @@ status = set(int(x) for x in (BOT_STATUS).split())
 datetimeFormat = '%Y-%m-%d %H:%M:%S.%f'
 
 start = None
+
+async def batch_messages(messages, batch_size=80):
+    """Yield successive batch_size chunks from messages."""
+    iterator = iter(messages)
+    while True:
+        batch = list(islice(iterator, batch_size))
+        if not batch:
+            break
+        yield batch
 
 @forwardbot_cmd("forward", is_args=False)
 async def handler(event):
@@ -140,7 +150,7 @@ async def handler(event):
             await event.respond("Sleeping the engine for avoiding ban.")
             return
         try:
-            m=await event.respond("Trying Forwarding")
+            m=await event.respond("Trying Batch Forwarding")
             fromchat = int(fromchannel)
             tochat = int("-1002332846289")
             count = random.randint(934, 986)
@@ -152,84 +162,60 @@ async def handler(event):
             print("Starting to forward")
             global start
             start = str(datetime.datetime.now())
+
+            messages_to_forward = []
+            temp_count = 0
+            
             async for message in client.iter_messages(fromchat, reverse=True, offset_id=offset):
-                if count:
-                    if mcount:
-                        if media_type(message) == type or type == 'All':
-                            try:
-                                if media_type(message) == 'Document':
-                                    await client.send_file(tochat, message.document)
-                                    try:
-                                        if len(str(message.file.name)) <= 95:
-                                            print("Succesfully forwarded: " + str(message.file.name))
-                                        else:
-                                            logmsg = str(message.file.name)
-                                            logmsg = logmsg[:95] + "..."
-                                            print("Succesfully forwarded: " + logmsg)
-                                    except:
-                                        print("Unable to retrive data.")
-                                    status.add("1")
-                                    try:
-                                        status.remove("2")
-                                    except:
-                                        pass
-                                    await asyncio.sleep(random.randint(2, 4))
-                                    mcount -= 1
-                                    count -= 1
-                                    MessageCount += 1
-                                    await m.edit(f"Now Forwarding {type}.")
-                                else:
-                                    try:
-                                        await client.send_message(tochat, message)
-                                        try:
-                                            if len(str(message.message)) == 0:
-                                                logmsg = media_type(message)
-                                            elif len(str(message.message)) <= 95:
-                                                logmsg = str(message.message)
-                                            else:
-                                                logmsg = str(message.message)
-                                                logmsg = logmsg[:95] + "..."
-                                            print("Succesfully forwarded: " + logmsg)
-                                        except:
-                                            print("Unable to retrive data.")
-                                        status.add("1")
-                                        try:
-                                            status.remove("2")
-                                        except:
-                                            pass
-                                        await asyncio.sleep(random.randint(2, 4))
-                                        mcount -= 1
-                                        count -= 1
-                                        MessageCount += 1
-                                        await m.edit(f"Now Forwarding {type}.")
-                                    except:
-                                        pass
-                            except:
-                                pass
-                    else:
-                        print(f"You have send {MessageCount} messages" )
-                        print("Waiting for some time 100+ sended")
+                if temp_count >= count:
+                    break
+                
+                if media_type(message) == type or type == 'All':
+                    messages_to_forward.append(message)
+                    temp_count += 1
+
+            # Process messages in batches
+            batch_size = 80  # Telegram's forward limit is 100, using 80 to be safe
+            
+            async for batch in batch_messages(messages_to_forward, batch_size):
+                try:
+                    # Forward the batch
+                    await client.forward_messages(tochat, messages=batch, from_peer=fromchat)
+                    
+                    # Update message count
+                    MessageCount += len(batch)
+                    
+                    # Log progress
+                    await m.edit(f"Forwarded batch of {len(batch)} messages. Total: {MessageCount}")
+                    print(f"Successfully forwarded batch of {len(batch)} messages")
+                    
+                    # Add delay between batches
+                    status.add("1")
+                    try:
+                        status.remove("2")
+                    except:
+                        pass
+                    
+                    # Sleep between batches to avoid flood limits
+                    await asyncio.sleep(random.randint(30, 45))
+                    
+                    # Add longer delay after every 5 batches
+                    if MessageCount % (batch_size * 5) == 0:
+                        print("Taking a longer break after multiple batches")
                         status.add("2")
                         status.remove("1")
-                        await m.edit(f"You have send {MessageCount} messages.\nWaiting for minutes.")
-                        await asyncio.sleep(random.randint(2101, 2343))
-                        mcount = random.randint(95, 127)
-                        print("Starting after few minutest (100+)")
-                        await m.edit("Starting after few minutes.(100+)")
-                else:
-                    print(f"You have send {MessageCount} messages")
-                    print("Waiting for 1h")
-                    status.add("2")
-                    status.remove("1")
-                    await m.edit(f"You have send {MessageCount} messages.\nWaiting for 1 hour.")
-                    await asyncio.sleep(random.randint(3751, 3843))
-                    count = random.randint(934, 986)
-                    print("Starting after 1 hour")
-                    await m.edit("Starting after 1 hour")
-                    
+                        await m.edit(f"Forwarded {MessageCount} messages. Taking a break to avoid limits.")
+                        await asyncio.sleep(random.randint(300, 400))
+                
+                except Exception as e:
+                    print(f"Error in batch forwarding: {str(e)}")
+                    await asyncio.sleep(random.randint(60, 120))
+                    continue
+
         except ValueError:
             await m.edit("You must join the channel before starting forwarding. Use /join")
             return
+            
         print("Finished")
         stop = str(datetime.datetime.now())
         diff = datetime.datetime.strptime(start, datetimeFormat) - datetime.datetime.strptime(stop, datetimeFormat)
@@ -238,7 +224,7 @@ async def handler(event):
         hours = int(seconds / 3600)
         minutes = int((seconds % 3600)/60)
         seconds = int(seconds % 60)
-        await event.respond(f"Succesfully finished sending {MessageCount} messages in {days} days, {hours} hours, {minutes} minutes and {seconds} seconds")
+        await event.respond(f"Successfully finished sending {MessageCount} messages in {days} days, {hours} hours, {minutes} minutes and {seconds} seconds")
         try:
             status.remove("1")
         except:
