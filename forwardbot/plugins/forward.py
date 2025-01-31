@@ -1,6 +1,5 @@
 from telethon.sync import events
 from forwardbot import bot
-from forwardbot import client
 from forwardbot.utils import is_sudo
 from forwardbot.tool import *
 from telethon import Button
@@ -38,16 +37,8 @@ async def handler(event):
             if not r.is_reply:
                 await conv.send_message("Please send the message as a reply to the message.")
             else:
-            #     await conv.send_message("Okay now send me the channel id to where you want to forward messages as a reply to this message.")
                 break
         while True:
-            # p = conv.wait_event(events.NewMessage(chats=event.chat_id))
-            # p = await p
-            # global tochannel
-            # tochannel = p.message.message.strip()
-            # if not p.is_reply:
-            #     await conv.send_message("Please send the message as a reply to the message.")
-            # else:
                 await conv.send_message("Okay now send me the message id from where you want to start forwarding as a reply to this message.(0 if you want to forward from begining)")
                 break
         while True:
@@ -105,7 +96,6 @@ async def handler(event):
     if "1" not in status and "2" not in status:
         await event.respond("Bot is Idle now, You can start a task.")
 
-
 @forwardbot_cmd("count", is_args=False)
 async def handler(event):
     if not await is_sudo(event):
@@ -113,7 +103,6 @@ async def handler(event):
         return
     await event.respond(f"You have send {MessageCount} messages")
     print(f"You have send {MessageCount} messages")
-
 
 @bot.on(events.CallbackQuery)
 async def handler(event):
@@ -152,13 +141,13 @@ async def handler(event):
             print("Starting to forward")
             global start
             start = str(datetime.datetime.now())
-            async for message in client.iter_messages(fromchat, reverse=True, offset_id=offset):
+            async for message in bot.iter_messages(fromchat, reverse=True, offset_id=offset):
                 if count:
                     if mcount:
                         if media_type(message) == type or type == 'All':
                             try:
                                 if media_type(message) == 'Document':
-                                    await client.send_file(tochat, message.document)
+                                    await bot.send_file(tochat, message.document)
                                     try:
                                         if len(str(message.file.name)) <= 95:
                                             print("Succesfully forwarded: " + str(message.file.name))
@@ -180,7 +169,7 @@ async def handler(event):
                                     await m.edit(f"Now Forwarding {type}.")
                                 else:
                                     try:
-                                        await client.send_message(tochat, message)
+                                        await bot.send_message(tochat, message)
                                         try:
                                             if len(str(message.message)) == 0:
                                                 logmsg = media_type(message)
