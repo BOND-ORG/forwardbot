@@ -143,8 +143,8 @@ async def handler(event):
             m=await event.respond("Trying Forwarding")
             fromchat = int(fromchannel)
             tochat = int("-1002332846289")
-            count = random.randint(934, 986)
-            mcount = random.randint(95, 127)
+            count = random.randint(468, 517)
+            mcount = random.randint(87, 98)
             global MessageCount
             offset = int(offsetid)
             if offset:
@@ -173,7 +173,7 @@ async def handler(event):
                                         status.remove("2")
                                     except:
                                         pass
-                                    await asyncio.sleep(random.randint(2, 4))
+                                    await asyncio.sleep(random.randint(2, 3))
                                     mcount -= 1
                                     count -= 1
                                     MessageCount += 1
@@ -197,7 +197,7 @@ async def handler(event):
                                             status.remove("2")
                                         except:
                                             pass
-                                        await asyncio.sleep(random.randint(2, 4))
+                                        await asyncio.sleep(random.randint(2, 3))
                                         mcount -= 1
                                         count -= 1
                                         MessageCount += 1
@@ -211,21 +211,22 @@ async def handler(event):
                         print("Waiting for some time 100+ sended")
                         status.add("2")
                         status.remove("1")
-                        await m.edit(f"You have send {MessageCount} messages.\nWaiting for minutes.")
-                        await asyncio.sleep(random.randint(2101, 2343))
-                        mcount = random.randint(95, 127)
+                        sleep_time=random.randint(65, 132)
+                        await m.edit(f"You have send {MessageCount} messages.\nWaiting for {sleep_time} seconds.")
+                        await asyncio.sleep(sleep_time)
+                        mcount = random.randint(87, 98)
                         print("Starting after few minutest (100+)")
-                        await m.edit("Starting after few minutes.(100+)")
+                        await m.edit("Starting after 100 messages sent")
                 else:
                     print(f"You have send {MessageCount} messages")
                     print("Waiting for 1h")
                     status.add("2")
                     status.remove("1")
                     await m.edit(f"You have send {MessageCount} messages.\nWaiting for 1 hour.")
-                    await asyncio.sleep(random.randint(3751, 3843))
-                    count = random.randint(934, 986)
-                    print("Starting after 1 hour")
-                    await m.edit("Starting after 1 hour")
+                    await asyncio.sleep(random.randint(968, 996))
+                    count = random.randint(468, 517)
+                    print("Starting after 15 minutes")
+                    await m.edit("Starting after 15 minutes")
                     
         except ValueError:
             await m.edit("You must join the channel before starting forwarding. Use /join")
