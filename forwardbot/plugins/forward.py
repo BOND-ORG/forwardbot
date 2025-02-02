@@ -17,6 +17,7 @@ datetimeFormat = '%Y-%m-%d %H:%M:%S.%f'
 
 start = None
 last_message_id = None
+message_limit = 0
 
 async def format_status_message(message_count, start_time, current_type):
     global last_message_id
@@ -35,7 +36,7 @@ async def format_status_message(message_count, start_time, current_type):
     status_message = f"""📊 **Forward Bot Status**
     
 ⏱ **Uptime**: {days}d {hours}h {minutes}m {seconds}s
-📤 **Total Messages**: {message_count}
+📤 **Total Messages**: {message_count}/{message_limit} messages
 📝 **Last Message ID**: {last_message_id or 'None'}
 
 🔄 **Current Task**: Forwarding {current_type}
@@ -67,6 +68,18 @@ async def handler(event):
                 await conv.send_message("Please send the message as a reply to the message.")
             else:
                 break
+            
+        await conv.send_message("Select how many messages you want to forward:", buttons=[
+            [Button.inline('1000', b'1000'), Button.inline('3000', b'3000')],
+            [Button.inline('5000', b'5000'), Button.inline('7000', b'7000')]
+        ])
+        
+        # Wait for button response
+        resp = await conv.wait_event(events.CallbackQuery)
+        global message_limit
+        message_limit = int(resp.data.decode())
+        await resp.answer()
+        
         while True:
             await conv.send_message("Okay now send me the message id from where you want to start forwarding as a reply to this message.(0 if you want to forward from beginning)")
             break
@@ -168,6 +181,10 @@ async def handler(event):
 
             async for message in client.iter_messages(fromchat, reverse=True, offset_id=offset):
 
+                if MessageCount >= message_limit:
+                    await m.edit(f"✅ Reached message limit of {message_limit}")
+                    return
+                
                 if count:
                     if mcount:
                         if media_type(message) == type or type == 'All':
