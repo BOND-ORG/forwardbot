@@ -16,6 +16,34 @@ status = set(int(x) for x in (BOT_STATUS).split())
 datetimeFormat = '%Y-%m-%d %H:%M:%S.%f'
 
 start = None
+last_message_id = None
+
+async def format_status_message(message_count, start_time, current_type):
+    global last_message_id
+    
+    # Calculate uptime
+    current_time = datetime.datetime.now()
+    if start_time:
+        diff = current_time - datetime.datetime.strptime(start_time, datetimeFormat)
+        days, seconds = diff.days, diff.seconds
+        hours = int(seconds / 3600)
+        minutes = int((seconds % 3600)/60)
+        seconds = int(seconds % 60)
+    else:
+        days = hours = minutes = seconds = 0
+    
+    status_message = f"""📊 **Forward Bot Status**
+    
+⏱ **Uptime**: {days}d {hours}h {minutes}m {seconds}s
+📤 **Total Messages**: {message_count}
+📝 **Last Message ID**: {last_message_id or 'None'}
+
+🔄 **Current Task**: Forwarding {current_type}
+⚡ **Status**: {'Active' if '1' in status else 'Sleeping' if '2' in status else 'Idle'}
+
+❌ Use /cancel to stop forwarding"""
+
+    return status_message
 
 @forwardbot_cmd("forward", is_args=False)
 async def handler(event):
@@ -38,18 +66,10 @@ async def handler(event):
             if not r.is_reply:
                 await conv.send_message("Please send the message as a reply to the message.")
             else:
-            #     await conv.send_message("Okay now send me the channel id to where you want to forward messages as a reply to this message.")
                 break
         while True:
-            # p = conv.wait_event(events.NewMessage(chats=event.chat_id))
-            # p = await p
-            # global tochannel
-            # tochannel = p.message.message.strip()
-            # if not p.is_reply:
-            #     await conv.send_message("Please send the message as a reply to the message.")
-            # else:
-                await conv.send_message("Okay now send me the message id from where you want to start forwarding as a reply to this message.(0 if you want to forward from begining)")
-                break
+            await conv.send_message("Okay now send me the message id from where you want to start forwarding as a reply to this message.(0 if you want to forward from beginning)")
+            break
         while True:
             q = conv.wait_event(events.NewMessage(chats=event.chat_id))
             q = await q
@@ -60,17 +80,18 @@ async def handler(event):
             else:
                 break
         await event.respond('Select What you need to forward', buttons=[
-                    [Button.inline('All Messages', b'all'), Button.inline('Only Photos', b'photo')],
-                    [Button.inline('Only Documents', b'docs'), Button.inline(' Only Video' , b'video')]
-                    ])
+            [Button.inline('All Messages', b'all'), Button.inline('Only Photos', b'photo')],
+            [Button.inline('Only Documents', b'docs'), Button.inline('Only Video', b'video')]
+        ])
 
 @forwardbot_cmd("reset", is_args=False)
 async def handler(event):
     if not await is_sudo(event):
         await event.respond("You are not authorized to use this Bot. Create your own.")
         return
-    global MessageCount
-    MessageCount=0
+    global MessageCount, last_message_id
+    MessageCount = 0
+    last_message_id = None
     await event.respond("Message count has been reset to 0")
     print("Message count has been reset to 0")
 
@@ -81,14 +102,8 @@ async def handler(event):
         return
     global start
     if start:
-        stop = str(datetime.datetime.now())
-        diff = datetime.datetime.strptime(start, datetimeFormat) - datetime.datetime.strptime(stop, datetimeFormat)
-        duration = abs(diff)
-        days, seconds = duration.days, duration.seconds
-        hours = int(seconds / 3600)
-        minutes = int((seconds % 3600)/60)
-        seconds = int(seconds % 60)
-        await event.respond(f"The bot is forwarding files for {days} days, {hours} hours, {minutes} minutes and {seconds} seconds")
+        status_message = await format_status_message(MessageCount, start, "None")
+        await event.respond(status_message)
     else:
         await event.respond("Please start a forwarding to check the uptime")
 
@@ -97,23 +112,21 @@ async def handler(event):
     if not await is_sudo(event):
         await event.respond("You are not authorized to use this Bot. Create your own.")
         return
-
-    if "1" in status:
-        await event.respond("Currently Bot is forwarding messages.")
-    if "2" in status:
-        await event.respond("Now Bot is Sleeping")
-    if "1" not in status and "2" not in status:
-        await event.respond("Bot is Idle now, You can start a task.")
-
+    
+    if start:
+        status_message = await format_status_message(MessageCount, start, "Current")
+        await event.respond(status_message)
+    else:
+        current_status = "Running" if "1" in status else "Sleeping" if "2" in status else "Idle"
+        await event.respond(f"Bot Status: {current_status}")
 
 @forwardbot_cmd("count", is_args=False)
 async def handler(event):
     if not await is_sudo(event):
         await event.respond("You are not authorized to use this Bot. Create your own.")
         return
-    await event.respond(f"You have send {MessageCount} messages")
-    print(f"You have send {MessageCount} messages")
-
+    status_message = await format_status_message(MessageCount, start, "None")
+    await event.respond(status_message)
 
 @bot.on(events.CallbackQuery)
 async def handler(event):
@@ -140,19 +153,21 @@ async def handler(event):
             await event.respond("Sleeping the engine for avoiding ban.")
             return
         try:
-            m=await event.respond("Trying Forwarding")
+            m = await event.respond("Initializing forwarding...")
             fromchat = int(fromchannel)
             tochat = int("-1002332846289")
             count = random.randint(468, 517)
             mcount = random.randint(87, 98)
-            global MessageCount
+            global MessageCount, start, last_message_id
             offset = int(offsetid)
             if offset:
                 offset = offset-1
             print("Starting to forward")
-            global start
             start = str(datetime.datetime.now())
+            last_status_update = datetime.datetime.now()
+
             async for message in client.iter_messages(fromchat, reverse=True, offset_id=offset):
+
                 if count:
                     if mcount:
                         if media_type(message) == type or type == 'All':
@@ -161,85 +176,71 @@ async def handler(event):
                                     await client.send_file(tochat, message.document)
                                     try:
                                         if len(str(message.file.name)) <= 95:
-                                            print("Succesfully forwarded: " + str(message.file.name))
+                                            print("Successfully forwarded: " + str(message.file.name))
                                         else:
                                             logmsg = str(message.file.name)
                                             logmsg = logmsg[:95] + "..."
-                                            print("Succesfully forwarded: " + logmsg)
+                                            print("Successfully forwarded: " + logmsg)
                                     except:
-                                        print("Unable to retrive data.")
-                                    status.add("1")
-                                    try:
-                                        status.remove("2")
-                                    except:
-                                        pass
-                                    await asyncio.sleep(random.randint(2, 3))
-                                    mcount -= 1
-                                    count -= 1
-                                    MessageCount += 1
-                                    await m.edit(f"Now Forwarding {type}.")
+                                        print("Unable to retrieve data.")
                                 else:
+                                    await client.send_message(tochat, message)
                                     try:
-                                        await client.send_message(tochat, message)
-                                        try:
-                                            if len(str(message.message)) == 0:
-                                                logmsg = media_type(message)
-                                            elif len(str(message.message)) <= 95:
-                                                logmsg = str(message.message)
-                                            else:
-                                                logmsg = str(message.message)
-                                                logmsg = logmsg[:95] + "..."
-                                            print("Succesfully forwarded: " + logmsg)
-                                        except:
-                                            print("Unable to retrive data.")
-                                        status.add("1")
-                                        try:
-                                            status.remove("2")
-                                        except:
-                                            pass
-                                        await asyncio.sleep(random.randint(2, 3))
-                                        mcount -= 1
-                                        count -= 1
-                                        MessageCount += 1
-                                        await m.edit(f"Now Forwarding {type}.")
+                                        if len(str(message.message)) == 0:
+                                            logmsg = media_type(message)
+                                        elif len(str(message.message)) <= 95:
+                                            logmsg = str(message.message)
+                                        else:
+                                            logmsg = str(message.message)
+                                            logmsg = logmsg[:95] + "..."
+                                        print("Successfully forwarded: " + logmsg)
                                     except:
-                                        pass
+                                        print("Unable to retrieve data.")
+                                
+                                status.add("1")
+                                try:
+                                    status.remove("2")
+                                except:
+                                    pass
+                                
+                                last_message_id = message.id
+                                await asyncio.sleep(random.randint(2, 3))
+                                mcount -= 1
+                                count -= 1
+                                MessageCount += 1
+                                
+                                # Update status message every 5 seconds
+                                current_time = datetime.datetime.now()
+                                if (current_time - last_status_update).total_seconds() >= 5:
+                                    status_message = await format_status_message(MessageCount, start, type)
+                                    await m.edit(status_message)
+                                    last_status_update = current_time
                             except:
                                 pass
                     else:
-                        print(f"You have send {MessageCount} messages" )
-                        print("Waiting for some time 100+ sended")
+                        print(f"You have sent {MessageCount} messages")
                         status.add("2")
                         status.remove("1")
-                        sleep_time=random.randint(65, 132)
-                        await m.edit(f"You have send {MessageCount} messages.\nWaiting for {sleep_time} seconds.")
+                        sleep_time = random.randint(65, 132)
+                        await m.edit(await format_status_message(MessageCount, start, f"{type} (Sleeping for {sleep_time}s)"))
                         await asyncio.sleep(sleep_time)
                         mcount = random.randint(87, 98)
-                        print("Starting after few minutest (100+)")
-                        await m.edit("Starting after 100 messages sent")
+                        print("Starting after few minutes (100+)")
                 else:
-                    print(f"You have send {MessageCount} messages")
-                    print("Waiting for 1h")
+                    print(f"You have sent {MessageCount} messages")
                     status.add("2")
                     status.remove("1")
-                    await m.edit(f"You have send {MessageCount} messages.\nWaiting for 1 hour.")
+                    await m.edit(await format_status_message(MessageCount, start, f"{type} (Long Sleep - 1h)"))
                     await asyncio.sleep(random.randint(968, 996))
                     count = random.randint(468, 517)
                     print("Starting after 15 minutes")
-                    await m.edit("Starting after 15 minutes")
                     
         except ValueError:
             await m.edit("You must join the channel before starting forwarding. Use /join")
             return
-        print("Finished")
-        stop = str(datetime.datetime.now())
-        diff = datetime.datetime.strptime(start, datetimeFormat) - datetime.datetime.strptime(stop, datetimeFormat)
-        duration = abs(diff)
-        days, seconds = duration.days, duration.seconds
-        hours = int(seconds / 3600)
-        minutes = int((seconds % 3600)/60)
-        seconds = int(seconds % 60)
-        await event.respond(f"Succesfully finished sending {MessageCount} messages in {days} days, {hours} hours, {minutes} minutes and {seconds} seconds")
+
+        final_status = await format_status_message(MessageCount, start, f"{type} (Completed)")
+        await event.respond(final_status)
         try:
             status.remove("1")
         except:
