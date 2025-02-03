@@ -86,20 +86,8 @@ async def handler(event):
             else:
                 break
         
-        # Wait for button response
-        #        await conv.send_message("Select how many messages you want to forward:", buttons=[
-        #     [Button.inline('1000', b'1000'), Button.inline('3000', b'3000')],
-        #     [Button.inline('5000', b'5000'), Button.inline('7000', b'7000')]
-        # ])
-               
-        # resp = await conv.wait_event(events.CallbackQuery)
-        # global message_limit
-        # message_limit = int(resp.data.decode())
-        # await resp.answer()
-        
-        while True:
-            await conv.send_message("Okay now send me the message id from where you want to start forwarding as a reply to this message.(0 if you want to forward from beginning)")
-            break
+
+        await conv.send_message("Okay now send me the message id from where you want to start forwarding as a reply to this message.(0 if you want to forward from beginning)")
         while True:
             q = conv.wait_event(events.NewMessage(chats=event.chat_id))
             q = await q
@@ -114,29 +102,6 @@ async def handler(event):
             [Button.inline('Only Documents', b'docs'), Button.inline('Only Video', b'video')]
         ])
 
-# @forwardbot_cmd("reset", is_args=False)
-# async def handler(event):
-#     if not await is_sudo(event):
-#         await event.respond("You are not authorized to use this Bot. Create your own.")
-#         return
-#     global MessageCount, last_message_id
-#     MessageCount = 0
-#     last_message_id = None
-#     await event.respond("Message count has been reset to 0")
-#     print("Message count has been reset to 0")
-
-# @forwardbot_cmd("uptime", is_args=False)
-# async def handler(event):
-#     if not await is_sudo(event):
-#         await event.respond("You are not authorized to use this Bot. Create your own.")
-#         return
-#     global start
-#     if start:
-#         status_message = await format_status_message(MessageCount, start, "None")
-#         await event.respond(status_message)
-#     else:
-#         await event.respond("Please start a forwarding to check the uptime")
-
 @forwardbot_cmd("status", is_args=False)
 async def handler(event):
     if not await is_sudo(event):
@@ -149,14 +114,6 @@ async def handler(event):
     else:
         current_status = "Running" if "1" in status else "Sleeping" if "2" in status else "Completed" if "3" in status else "Idle"
         await event.respond(f"Bot Status: {current_status}")
-
-# @forwardbot_cmd("count", is_args=False)
-# async def handler(event):
-#     if not await is_sudo(event):
-#         await event.respond("You are not authorized to use this Bot. Create your own.")
-#         return
-#     status_message = await format_status_message(MessageCount, start, "None")
-#     await event.respond(status_message)
 
 @bot.on(events.CallbackQuery)
 async def handler(event):
@@ -189,8 +146,8 @@ async def handler(event):
             m = await event.respond("Initializing forwarding...")
             fromchat = int(fromchannel)
             tochat = int("-1002332846289")
-            count = random.randint(968, 1315)
-            mcount = random.randint(151, 216)
+            count = random.randint(151, 216)
+            mcount = random.randint(86, 98)
             global MessageCount, start, last_message_id
             offset = int(offsetid)
             if offset:
@@ -261,16 +218,16 @@ async def handler(event):
                         print(f"You have sent {MessageCount} messages")
                         status.add("2")
                         status.remove("1")
-                        sleep_time = random.randint(40, 70)
+                        sleep_time = random.randint(65, 78)
                         end_time = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_time)).strftime("%I:%M %p")
                         await m.edit(await format_status_message(MessageCount, start, f" Sleeping till {end_time}"))
                         await asyncio.sleep(sleep_time)
-                        mcount = random.randint(151, 216)
+                        mcount = random.randint(86, 98)
                 else:
                     print(f"You have sent {MessageCount} messages")
                     status.add("2")
                     status.remove("1")
-                    sleep_time = random.randint(1200, 1350)
+                    sleep_time = random.randint(151, 218)
                     end_time = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_time)).strftime("%I:%M %p")
                     await m.edit(await format_status_message(MessageCount, start, f" Sleeping till {end_time}"))
                     await asyncio.sleep(sleep_time)

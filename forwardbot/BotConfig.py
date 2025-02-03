@@ -11,20 +11,10 @@ class Config(object):
     
     **Command :** /forward
     **Usage : ** Forwards messages from a channel to other.
-    **Command :** /count
-    **Usage : ** Returns the Total message sent using the bot.
-    **Command :** /reset
-    **Usage : ** Resets the message count to 0.
-    **Command :** /restart
-    **Usage : ** Updates and Restarts the Bot.
-    **Command :** /join
-    **Usage : ** Joins the channel.
     **Command :** /help
     **Usage : ** Get the help of this bot.
     **Command :** /status
     **Usage :** Check current status of Bot.
-    **Command :** /uptime
-    **Usage :** Check uptime of Bot.
-    
-    Bot is created by @lal_bakthan and @subinps
+    **Command :** /cancel
+    **Usage :** To Restart Bot.
     """
