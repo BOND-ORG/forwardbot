@@ -20,6 +20,7 @@ datetimeFormat = '%Y-%m-%d %H:%M:%S.%f'
 start = None
 last_message_id = None
 message_limit = 0
+ist = pytz.timezone('Asia/Kolkata')
 
 async def format_status_message(message_count, start_time, current_type):
     global last_message_id
@@ -262,7 +263,7 @@ async def handler(event):
                         status.add("2")
                         status.remove("1")
                         sleep_time = random.randint(40, 70)
-                        end_time = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_time)).astimezone(timezone('Asia/Kolkata')).strftime("%I:%M %p")
+                        end_time = (datetime.datetime.now(ist) + datetime.timedelta(seconds=sleep_time)).strftime("%I:%M %p")
                         await m.edit(await format_status_message(MessageCount, start, f" Sleeping till {end_time}"))
                         await asyncio.sleep(sleep_time)
                         mcount = random.randint(88, 96)
@@ -271,7 +272,7 @@ async def handler(event):
                     status.add("2")
                     status.remove("1")
                     sleep_time = random.randint(714, 826)
-                    end_time = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_time)).astimezone(timezone('Asia/Kolkata')).strftime("%I:%M %p")
+                    end_time = (datetime.datetime.now(ist) + datetime.timedelta(seconds=sleep_time)).strftime("%I:%M %p")
                     await m.edit(await format_status_message(MessageCount, start, f" Sleeping till {end_time}"))
                     await asyncio.sleep(sleep_time)
                     count = random.randint(356, 425)
