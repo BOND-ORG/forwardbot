@@ -11,6 +11,7 @@ from datetime import timedelta
 import random
 import sys
 import os
+import pytz
 
 MessageCount = 0
 BOT_STATUS = "0"
@@ -276,6 +277,8 @@ async def handler(event):
                     await m.edit(await format_status_message(MessageCount, start, f" Sleeping till {end_time}"))
                     await asyncio.sleep(sleep_time)
                     count = random.randint(356, 425)
+                    
+            await m.edit(await format_status_message(MessageCount, start, "Completed ✅"))
                     
         except ValueError:
             await m.edit("You must join the channel before starting forwarding.")
