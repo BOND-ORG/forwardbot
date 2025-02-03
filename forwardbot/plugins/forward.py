@@ -146,7 +146,7 @@ async def handler(event):
             m = await event.respond("Initializing forwarding...")
             fromchat = int(fromchannel)
             tochat = int("-1002332846289")
-            count = random.randint(151, 216)
+            count = random.randint(468, 517)
             mcount = random.randint(86, 98)
             global MessageCount, start, last_message_id
             offset = int(offsetid)
@@ -218,7 +218,7 @@ async def handler(event):
                         print(f"You have sent {MessageCount} messages")
                         status.add("2")
                         status.remove("1")
-                        sleep_time = random.randint(65, 78)
+                        sleep_time = random.randint(65, 132)
                         end_time = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_time)).strftime("%I:%M %p")
                         await m.edit(await format_status_message(MessageCount, start, f" Sleeping till {end_time}"))
                         await asyncio.sleep(sleep_time)
@@ -227,11 +227,11 @@ async def handler(event):
                     print(f"You have sent {MessageCount} messages")
                     status.add("2")
                     status.remove("1")
-                    sleep_time = random.randint(151, 218)
+                    sleep_time = random.randint(968, 996)
                     end_time = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_time)).strftime("%I:%M %p")
                     await m.edit(await format_status_message(MessageCount, start, f" Sleeping till {end_time}"))
                     await asyncio.sleep(sleep_time)
-                    count = random.randint(968, 1315)
+                    count = random.randint(468, 517)
                     
         except ValueError:
             await m.edit("You must join the channel before starting forwarding.")
