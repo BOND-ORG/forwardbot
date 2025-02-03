@@ -1,3 +1,7 @@
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+
 from forwardbot.BotConfig import Config
 from forwardbot import bot
 from forwardbot import client

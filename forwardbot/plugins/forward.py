@@ -9,6 +9,8 @@ from forwardbot.utils import forwardbot_cmd
 import datetime
 from datetime import timedelta
 import random
+import sys
+import os
 
 MessageCount = 0
 BOT_STATUS = "0"
@@ -36,15 +38,16 @@ async def format_status_message(message_count, start_time, current_type):
     status_message = f"""📊 **Forward Bot Status**
     
 ⏱ **Uptime**: {days}d {hours}h {minutes}m {seconds}s
-📤 **Total Messages**: {message_count}/{message_limit} messages
-📝 **Last Message ID**: {last_message_id or 'None'}
+📤 **Total Forwarded**: {message_count} messages
+📝 **Last Message ID**: `{last_message_id or 'None'}`
 
-🔄 **Current Task**: Forwarding {current_type}
-⚡ **Status**: {'Active' if '1' in status else 'Sleeping' if '2' in status else 'Idle'}
-
-❌ Use /cancel to stop forwarding"""
+⚡ **Status**: {('Forwarding' if current_type == 'Document' else current_type)}
+"""
 
     return status_message
+
+# ❌ Use /cancel to stop forwarding
+#  ⚡ **Status**: {'Active' if '1' in status else 'Sleeping' if '2' in status else 'Completed' if '3' in status else 'Idle' }
 
 @forwardbot_cmd("forward", is_args=False)
 async def handler(event):
@@ -56,6 +59,9 @@ async def handler(event):
         return
     if "2" in status:
         await event.respond("Sleeping the engine for avoiding ban.")
+        return
+    if "3" in status:
+        await event.respond("The task is completed.")
         return
     async with bot.conversation(event.chat_id) as conv:
         await conv.send_message("Please send the channel id from where you want to forward messages as a reply to this message.")
@@ -69,16 +75,27 @@ async def handler(event):
             else:
                 break
             
-        await conv.send_message("Select how many messages you want to forward:", buttons=[
-            [Button.inline('1000', b'1000'), Button.inline('3000', b'3000')],
-            [Button.inline('5000', b'5000'), Button.inline('7000', b'7000')]
-        ])
+        await conv.send_message("Select how many messages you want to forward, 0 for unlimited")
+        while True:
+            r = conv.wait_event(events.NewMessage(chats=event.chat_id))
+            r = await r
+            global message_limit
+            message_limit = r.message.message.strip()
+            if not r.is_reply:
+                await conv.send_message("Please send the message as a reply to the message.")
+            else:
+                break
         
         # Wait for button response
-        resp = await conv.wait_event(events.CallbackQuery)
-        global message_limit
-        message_limit = int(resp.data.decode())
-        await resp.answer()
+        #        await conv.send_message("Select how many messages you want to forward:", buttons=[
+        #     [Button.inline('1000', b'1000'), Button.inline('3000', b'3000')],
+        #     [Button.inline('5000', b'5000'), Button.inline('7000', b'7000')]
+        # ])
+               
+        # resp = await conv.wait_event(events.CallbackQuery)
+        # global message_limit
+        # message_limit = int(resp.data.decode())
+        # await resp.answer()
         
         while True:
             await conv.send_message("Okay now send me the message id from where you want to start forwarding as a reply to this message.(0 if you want to forward from beginning)")
@@ -97,28 +114,28 @@ async def handler(event):
             [Button.inline('Only Documents', b'docs'), Button.inline('Only Video', b'video')]
         ])
 
-@forwardbot_cmd("reset", is_args=False)
-async def handler(event):
-    if not await is_sudo(event):
-        await event.respond("You are not authorized to use this Bot. Create your own.")
-        return
-    global MessageCount, last_message_id
-    MessageCount = 0
-    last_message_id = None
-    await event.respond("Message count has been reset to 0")
-    print("Message count has been reset to 0")
+# @forwardbot_cmd("reset", is_args=False)
+# async def handler(event):
+#     if not await is_sudo(event):
+#         await event.respond("You are not authorized to use this Bot. Create your own.")
+#         return
+#     global MessageCount, last_message_id
+#     MessageCount = 0
+#     last_message_id = None
+#     await event.respond("Message count has been reset to 0")
+#     print("Message count has been reset to 0")
 
-@forwardbot_cmd("uptime", is_args=False)
-async def handler(event):
-    if not await is_sudo(event):
-        await event.respond("You are not authorized to use this Bot. Create your own.")
-        return
-    global start
-    if start:
-        status_message = await format_status_message(MessageCount, start, "None")
-        await event.respond(status_message)
-    else:
-        await event.respond("Please start a forwarding to check the uptime")
+# @forwardbot_cmd("uptime", is_args=False)
+# async def handler(event):
+#     if not await is_sudo(event):
+#         await event.respond("You are not authorized to use this Bot. Create your own.")
+#         return
+#     global start
+#     if start:
+#         status_message = await format_status_message(MessageCount, start, "None")
+#         await event.respond(status_message)
+#     else:
+#         await event.respond("Please start a forwarding to check the uptime")
 
 @forwardbot_cmd("status", is_args=False)
 async def handler(event):
@@ -130,16 +147,16 @@ async def handler(event):
         status_message = await format_status_message(MessageCount, start, "Current")
         await event.respond(status_message)
     else:
-        current_status = "Running" if "1" in status else "Sleeping" if "2" in status else "Idle"
+        current_status = "Running" if "1" in status else "Sleeping" if "2" in status else "Completed" if "3" in status else "Idle"
         await event.respond(f"Bot Status: {current_status}")
 
-@forwardbot_cmd("count", is_args=False)
-async def handler(event):
-    if not await is_sudo(event):
-        await event.respond("You are not authorized to use this Bot. Create your own.")
-        return
-    status_message = await format_status_message(MessageCount, start, "None")
-    await event.respond(status_message)
+# @forwardbot_cmd("count", is_args=False)
+# async def handler(event):
+#     if not await is_sudo(event):
+#         await event.respond("You are not authorized to use this Bot. Create your own.")
+#         return
+#     status_message = await format_status_message(MessageCount, start, "None")
+#     await event.respond(status_message)
 
 @bot.on(events.CallbackQuery)
 async def handler(event):
@@ -165,12 +182,15 @@ async def handler(event):
         if "2" in status:
             await event.respond("Sleeping the engine for avoiding ban.")
             return
+        if "3" in status:
+            await event.respond("The task is completed.")
+            return
         try:
             m = await event.respond("Initializing forwarding...")
             fromchat = int(fromchannel)
             tochat = int("-1002332846289")
-            count = random.randint(468, 517)
-            mcount = random.randint(87, 98)
+            count = random.randint(968, 1315)
+            mcount = random.randint(151, 216)
             global MessageCount, start, last_message_id
             offset = int(offsetid)
             if offset:
@@ -180,9 +200,12 @@ async def handler(event):
             last_status_update = datetime.datetime.now()
 
             async for message in client.iter_messages(fromchat, reverse=True, offset_id=offset):
-
-                if MessageCount >= message_limit:
-                    await m.edit(f"✅ Reached message limit of {message_limit}")
+                if message_limit != "0" and MessageCount >= int(message_limit):
+                    status.add("3")
+                    status.remove("1")
+                    await m.edit(await format_status_message(MessageCount, start, "Completed ✅"))
+                    client.disconnect()
+                    os.execl(sys.executable, sys.executable, *sys.argv)
                     return
                 
                 if count:
@@ -238,22 +261,23 @@ async def handler(event):
                         print(f"You have sent {MessageCount} messages")
                         status.add("2")
                         status.remove("1")
-                        sleep_time = random.randint(65, 132)
-                        await m.edit(await format_status_message(MessageCount, start, f"{type} (Sleeping for {sleep_time}s)"))
+                        sleep_time = random.randint(40, 70)
+                        end_time = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_time)).strftime("%I:%M %p")
+                        await m.edit(await format_status_message(MessageCount, start, f" Sleeping till {end_time}"))
                         await asyncio.sleep(sleep_time)
-                        mcount = random.randint(87, 98)
-                        print("Starting after few minutes (100+)")
+                        mcount = random.randint(151, 216)
                 else:
                     print(f"You have sent {MessageCount} messages")
                     status.add("2")
                     status.remove("1")
-                    await m.edit(await format_status_message(MessageCount, start, f"{type} (Long Sleep - 1h)"))
-                    await asyncio.sleep(random.randint(968, 996))
-                    count = random.randint(468, 517)
-                    print("Starting after 15 minutes")
+                    sleep_time = random.randint(1200, 1350)
+                    end_time = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_time)).strftime("%I:%M %p")
+                    await m.edit(await format_status_message(MessageCount, start, f" Sleeping till {end_time}"))
+                    await asyncio.sleep(sleep_time)
+                    count = random.randint(968, 1315)
                     
         except ValueError:
-            await m.edit("You must join the channel before starting forwarding. Use /join")
+            await m.edit("You must join the channel before starting forwarding.")
             return
 
         final_status = await format_status_message(MessageCount, start, f"{type} (Completed)")
