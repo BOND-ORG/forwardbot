@@ -189,8 +189,8 @@ async def handler(event):
             m = await event.respond("Initializing forwarding...")
             fromchat = int(fromchannel)
             tochat = int("-1002332846289")
-            count = random.randint(968, 1315)
-            mcount = random.randint(151, 216)
+            count = random.randint(356, 425)
+            mcount = random.randint(88, 96)
             global MessageCount, start, last_message_id
             offset = int(offsetid)
             if offset:
@@ -244,7 +244,7 @@ async def handler(event):
                                     pass
                                 
                                 last_message_id = message.id
-                                await asyncio.sleep(random.randint(2, 3))
+                                await asyncio.sleep(random.randint(1, 2))
                                 mcount -= 1
                                 count -= 1
                                 MessageCount += 1
@@ -265,28 +265,17 @@ async def handler(event):
                         end_time = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_time)).strftime("%I:%M %p")
                         await m.edit(await format_status_message(MessageCount, start, f" Sleeping till {end_time}"))
                         await asyncio.sleep(sleep_time)
-                        mcount = random.randint(151, 216)
+                        mcount = random.randint(88, 96)
                 else:
                     print(f"You have sent {MessageCount} messages")
                     status.add("2")
                     status.remove("1")
-                    sleep_time = random.randint(1200, 1350)
+                    sleep_time = random.randint(714, 826)
                     end_time = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_time)).strftime("%I:%M %p")
                     await m.edit(await format_status_message(MessageCount, start, f" Sleeping till {end_time}"))
                     await asyncio.sleep(sleep_time)
-                    count = random.randint(968, 1315)
+                    count = random.randint(356, 425)
                     
         except ValueError:
             await m.edit("You must join the channel before starting forwarding.")
             return
-
-        final_status = await format_status_message(MessageCount, start, f"{type} (Completed)")
-        await event.respond(final_status)
-        try:
-            status.remove("1")
-        except:
-            pass
-        try:
-            status.remove("2")
-        except:
-            pass
