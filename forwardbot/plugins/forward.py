@@ -203,7 +203,7 @@ async def handler(event):
                                     pass
                                 
                                 last_message_id = message.id
-                                await asyncio.sleep(random.randint(1, 2))
+                                await asyncio.sleep(random.randint(2, 3))
                                 mcount -= 1
                                 count -= 1
                                 MessageCount += 1
