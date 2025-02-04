@@ -11,6 +11,7 @@ from datetime import timedelta
 import random
 import sys
 import os
+import pytz
 
 MessageCount = 0
 BOT_STATUS = "0"
@@ -20,6 +21,7 @@ datetimeFormat = '%Y-%m-%d %H:%M:%S.%f'
 start = None
 last_message_id = None
 message_limit = 0
+ist = pytz.timezone('Asia/Kolkata')
 
 async def format_status_message(message_count, start_time, current_type):
     global last_message_id
@@ -201,7 +203,7 @@ async def handler(event):
                                     pass
                                 
                                 last_message_id = message.id
-                                await asyncio.sleep(random.randint(2, 3))
+                                await asyncio.sleep(random.randint(1, 2))
                                 mcount -= 1
                                 count -= 1
                                 MessageCount += 1
@@ -219,7 +221,7 @@ async def handler(event):
                         status.add("2")
                         status.remove("1")
                         sleep_time = random.randint(65, 132)
-                        end_time = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_time)).strftime("%I:%M %p")
+                        end_time = (datetime.datetime.now(ist) + datetime.timedelta(seconds=sleep_time)).strftime("%I:%M %p")
                         await m.edit(await format_status_message(MessageCount, start, f" Sleeping till {end_time}"))
                         await asyncio.sleep(sleep_time)
                         mcount = random.randint(86, 98)
@@ -228,22 +230,13 @@ async def handler(event):
                     status.add("2")
                     status.remove("1")
                     sleep_time = random.randint(968, 996)
-                    end_time = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_time)).strftime("%I:%M %p")
+                    end_time = (datetime.datetime.now(ist) + datetime.timedelta(seconds=sleep_time)).strftime("%I:%M %p")
                     await m.edit(await format_status_message(MessageCount, start, f" Sleeping till {end_time}"))
                     await asyncio.sleep(sleep_time)
                     count = random.randint(468, 517)
                     
+            await m.edit(await format_status_message(MessageCount, start, "Completed ✅"))
+                    
         except ValueError:
             await m.edit("You must join the channel before starting forwarding.")
             return
-
-        final_status = await format_status_message(MessageCount, start, f"{type} (Completed)")
-        await event.respond(final_status)
-        try:
-            status.remove("1")
-        except:
-            pass
-        try:
-            status.remove("2")
-        except:
-            pass
