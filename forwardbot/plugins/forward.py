@@ -236,6 +236,9 @@ async def handler(event):
                     count = random.randint(468, 517)
                     
             await m.edit(await format_status_message(MessageCount, start, "Completed ✅"))
+            client.disconnect()
+            os.execl(sys.executable, sys.executable, *sys.argv)
+            return
                     
         except ValueError:
             await m.edit("You must join the channel before starting forwarding.")
