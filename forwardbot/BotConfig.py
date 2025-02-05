@@ -7,14 +7,15 @@ class Config(object):
     SUDO_USERS = environ.get("SUDO_USERS", None)
     COMMAND_HAND_LER = environ.get("COMMAND_HAND_LER", "^/")
     HELP_MSG = """
-    The Commands in the bot are:
-    
-    **Command :** /forward
-    **Usage : ** Forwards messages from a channel to other.
-    **Command :** /help
-    **Usage : ** Get the help of this bot.
-    **Command :** /status
-    **Usage :** Check current status of Bot.
-    **Command :** /cancel
-    **Usage :** To Restart Bot.
-    """
+The Commands in the bot are:
+
+**Command:** /forward
+**Usage:** Forwards messages from one channel to another.
+
+**Command:** /status
+**Usage:** Check current forwarding status.
+
+**Command:** /cancel
+**Usage:** Cancel ongoing forwarding process and restart bot.
+
+"""
