@@ -6,6 +6,8 @@ from telethon import TelegramClient
 from distutils.util import strtobool as sb
 from telethon import events
 from telethon.sessions import StringSession
+from telethon.tl.functions.bots import SetBotCommandsRequest
+from telethon.tl.types import BotCommand, BotCommandScopeDefault
 ENV = True
 
 if ENV:
@@ -52,15 +54,49 @@ async def is_sudo(event):
         return True
     else:
         return False
+
 @bot.on(events.NewMessage(pattern=r'/cancel'))
 async def handler(event):
     if not await is_sudo(event):
         await event.respond("You are not authorized to use this Bot. Create your own.")
         return
     try:
-        
         await event.respond('Cancelled and restarted.')
         client.disconnect()
         os.execl(sys.executable, sys.executable, *sys.argv)
     except:
         pass
+
+# Register default commands with BotFather
+async def register_commands():
+    commands = [
+        BotCommand(
+            command='forward',
+            description='Forward messages from one channel to another'
+        ),
+        BotCommand(
+            command='cancel',
+            description='Cancel ongoing forwarding process'
+        ),
+        BotCommand(
+            command='help',
+            description='Get help about using the bot'
+        ),
+        BotCommand(
+            command='status',
+            description='Check forwarding status'
+        )
+    ]
+    
+    try:
+        await bot(SetBotCommandsRequest(
+            scope=BotCommandScopeDefault(),
+            lang_code="en",
+            commands=commands
+        ))
+        logger.info("Bot commands registered successfully")
+    except Exception as e:
+        logger.error(f"Failed to register commands: {e}")
+
+# Register commands when bot starts
+bot.loop.run_until_complete(register_commands())

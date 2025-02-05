@@ -43,7 +43,7 @@ async def format_status_message(message_count, start_time, current_type):
 📤 **Total Forwarded**: {message_count} messages
 📝 **Last Message ID**: `{last_message_id or 'None'}`
 
-⚡ **Status**: {('Forwarding' if current_type == 'Document' else current_type)}
+⚡ **Status**: {('Forwarding' if current_type in ['Document', 'Photo', 'Video', 'All'] else current_type)}
 """
 
     return status_message
@@ -238,7 +238,6 @@ async def handler(event):
             await m.edit(await format_status_message(MessageCount, start, "Completed ✅"))
             client.disconnect()
             os.execl(sys.executable, sys.executable, *sys.argv)
-            return
                     
         except ValueError:
             await m.edit("You must join the channel before starting forwarding.")

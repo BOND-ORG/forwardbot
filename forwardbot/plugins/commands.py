@@ -16,11 +16,20 @@ async def start(event):
     if not await is_sudo(event):
         await event.respond("You are not authorized to use this Bot. Create your own.")
         return
-    replied_user = await event.client(GetFullUserRequest(event.sender_id))
-    await event.respond(message=f"**Hello I Am Batch Forwarder Bot.** \n**Using me you can forward all the files in a channel to anothor easily** \n**USE AT OWN RISK !!!!! ACCOUNT MAY GET BAN**"
-                     )
+    start_message = """**👋 Welcome to Forward Bot!**
 
+Use these commands to control the bot:
 
+/forward - Start forwarding messages
+/cancel - Stop ongoing forwarding
+/status - Check current status
+/help - Get detailed help
+
+To start forwarding, use /forward and follow the instructions.
+
+**⚠️ USE AT OWN RISK - ACCOUNT MAY GET BANNED**
+"""
+    await event.respond(start_message)               
 
 
 @forwardbot_cmd("help", is_args=False)
