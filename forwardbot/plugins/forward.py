@@ -42,6 +42,7 @@ async def format_status_message(message_count, start_time, current_type):
 ⏱ **Uptime**: {days}d {hours}h {minutes}m {seconds}s
 📤 **Total Forwarded**: {message_count} messages
 📝 **Last Message ID**: `{last_message_id or 'None'}`
+🔍 **Channel ID**: `{fromchannel or 'None'}`
 
 ⚡ **Status**: {('Forwarding' if current_type in ['Document', 'Photo', 'Video', 'All'] else current_type)}
 """
