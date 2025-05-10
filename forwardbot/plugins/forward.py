@@ -215,8 +215,13 @@ async def handler(event):
                                     status_message = await format_status_message(MessageCount, start, type)
                                     await m.edit(status_message)
                                     last_status_update = current_time
-                            except:
-                                pass
+                            except Exception as e:
+                                error_msg = f"Error occurred: {str(e)}"
+                                print(error_msg)
+                                await m.edit(f"{await format_status_message(MessageCount, start, 'Error ❌')}\n\n{error_msg}")
+                                client.disconnect()
+                                os.execl(sys.executable, sys.executable, *sys.argv)
+                                return
                     else:
                         print(f"You have sent {MessageCount} messages")
                         status.add("2")
@@ -240,6 +245,10 @@ async def handler(event):
             client.disconnect()
             os.execl(sys.executable, sys.executable, *sys.argv)
                     
-        except ValueError:
-            await m.edit("You must join the channel before starting forwarding.")
+        except Exception as e:
+            error_msg = f"Error occurred: {str(e)}"
+            print(error_msg)
+            await m.edit(f"Error: {error_msg}")
+            client.disconnect()
+            os.execl(sys.executable, sys.executable, *sys.argv)
             return
