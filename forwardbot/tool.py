@@ -1,18 +1,31 @@
 def media_type(message):
-    if message and message.photo:
+    """
+    Get media type from Pyrogram message.
+    
+    Args:
+        message: Pyrogram Message object
+    
+    Returns:
+        str: Media type name or None if no media
+    """
+    if not message:
+        return None
+        
+    if message.photo:
         return "Photo"
-    if message and message.audio:
+    if message.audio:
         return "Audio"
-    if message and message.voice:
+    if message.voice:
         return "Voice"
-    if message and message.video_note:
+    if message.video_note:
         return "Round Video"
-    if message and message.gif:
-        return "Gif"
-    if message and message.sticker:
+    if message.animation:
+        return "Animation"
+    if message.sticker:
         return "Sticker"
-    if message and message.video:
+    if message.video:
         return "Video"
-    if message and message.document:
+    if message.document:
         return "Document"
+    
     return None

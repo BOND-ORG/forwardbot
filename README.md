@@ -2,7 +2,7 @@
 
 <p align="center"><a href="#"><img src="https://telegra.ph/file/fa4d9d23a211f6bcf807b.jpg" width="250"></a></p> 
 <h1 align="center"><b>Forwarder Bot</b></h1>
-<h4 align="center">A Simple Forwarder Bot In Telethon TO Forward one Channel Contents to Another</h4>
+<h4 align="center">A Simple Forwarder Bot Built with Pyrogram to Forward Messages from One Channel to Another</h4>
 
 <h2 align="center">I will be soon releasing an update on this bot to make forwarding more easy. Stay Tuned and join [CodeXBotz](https://t.me/CodeXBotz) for further updates</h2>
 
@@ -20,23 +20,65 @@ python3 -m forwardbot
       or 
 python -m forwardbot
 ```
-# Commands
+
+# Docker
+# Stop container
+docker stop forwardbot
+
+# Start container
+docker start forwardbot
+
+# Restart container
+docker restart forwardbot
+
+# View logs
+docker logs -f forwardbot
+
+# Rebuild and restart
+docker stop forwardbot
+docker rm forwardbot
+docker build -t forward .
+docker run -d --restart=unless-stopped --name forwardbot forward
+
+## Main Commands
 **Command :** ```/forward``` <br />
-**Usage :** Forwards files from one channel to another. <br />
-**Command :** ```/count``` <br />
-**Usage :** Returns the Total message sent using the bot. <br />
-**Command :** ```/reset``` <br />
-**Usage :** Resets the message count to 0. <br />
-**Command :** ```/cancel``` <br />
-**Usage :** Cancel the current operation. <br />
-**Command :** ```/join```<br />
-**Usage :** Joins the given channel. <br />
-**Command :** ```/help``` <br />
-**Usage :** Get the help of this bot. <br />
+**Usage :** Forwards messages from one channel to another (standard method). Fast but won't work with protected channels. <br />
+
+**Command :** ```/copy``` <br />
+**Usage :** Copy messages from protected/restricted channels using download-upload method. Works with channels where forwarding is disabled. Slower but bypasses restrictions. <br />
+
 **Command :** ```/status``` <br />
-**Usage :** Check the status of Bot. <br />
-**Command :** ```/uptime``` <br />
-**Usage :** Check the uptime of bot. <br />
+**Usage :** Check the current forwarding/copying status. <br />
+
+**Command :** ```/cancel``` <br />
+**Usage :** Cancel the current operation and restart bot. <br />
+
+**Command :** ```/help``` <br />
+**Usage :** Get detailed help about using the bot. <br />
+
+## Features
+- ✅ **Standard Forwarding** - Fast forwarding for normal channels
+- ✅ **Protected Channel Support** - Copy from restricted/protected channels
+- ✅ **Download-Upload Method** - Bypass forward restrictions
+- ✅ **Public & Private Channels** - Works with both types (must be joined)
+- ✅ **Media Type Filtering** - Forward/copy specific types (Photos, Videos, Documents, All)
+- ✅ **Flood Protection** - Automatic delays to avoid bans
+- ✅ **Real-time Status** - Live updates on progress
+
+## When to Use Each Command
+
+### Use `/forward` when:
+- Channel allows forwarding
+- You want faster processing
+- Source channel is not protected
+
+### Use `/copy` when:
+- Channel has forward restrictions
+- Channel is protected/restricted
+- You want to bypass forward detection
+- You need to re-upload content without forward tag
+
+<br />
 
 # Credits
 Special thanks to [Subinps](https://github.com/subinps) for Contributing to create this bot

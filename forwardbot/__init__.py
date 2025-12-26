@@ -1,13 +1,12 @@
 import sys
+import logging
 from logging import DEBUG, WARNING, basicConfig, getLogger, INFO
 import os
+import asyncio
 
-from telethon import TelegramClient
+from pyrogram import Client
 from distutils.util import strtobool as sb
-from telethon import events
-from telethon.sessions import StringSession
-from telethon.tl.functions.bots import SetBotCommandsRequest
-from telethon.tl.types import BotCommand, BotCommandScopeDefault
+from pyrogram import filters
 ENV = True
 
 if ENV:
@@ -15,9 +14,39 @@ if ENV:
 else:
     from local_config import Development as Config
 
-bot = TelegramClient('bot', Config.API_ID, Config.API_HASH).start(bot_token=Config.BOT_TOKEN)
+bot = Client(
+    "bot",
+    api_id=Config.API_ID,
+    api_hash=Config.API_HASH,
+    bot_token=Config.BOT_TOKEN
+)
 
-client = TelegramClient(StringSession(Config.STRING_SESSION), Config.API_ID, Config.API_HASH)
+client = Client(
+    "user_session",
+    api_id=Config.API_ID,
+    api_hash=Config.API_HASH,
+    session_string=Config.STRING_SESSION
+)
+
+# Store pending conversations for listen pattern
+pending_conversations = {}
+
+# Simple listen implementation for Pyrogram
+async def listen(client_instance, chat_id, timeout=300):
+    """Wait for next message from user in chat"""
+    future = asyncio.Future()
+    pending_conversations[chat_id] = future
+    
+    try:
+        result = await asyncio.wait_for(future, timeout=timeout)
+        return result
+    finally:
+        if chat_id in pending_conversations:
+            del pending_conversations[chat_id]
+
+# Add listen method to both clients
+client.listen = lambda chat_id: listen(client, chat_id)
+bot.listen = lambda chat_id: listen(bot, chat_id)
 
 if bool(ENV):
     CONSOLE_LOGGER_VERBOSE = sb(os.environ.get("CONSOLE_LOGGER_VERBOSE", "False"))
@@ -31,6 +60,25 @@ if bool(ENV):
         basicConfig(
             format="[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s", level=INFO
         )
+    
+    # Custom filter to suppress peer resolution errors
+    class SuppressPeerErrors(logging.Filter):
+        def filter(self, record):
+            # Suppress "Peer id invalid" errors
+            if "Peer id invalid" in str(record.msg):
+                return False
+            # Suppress "Task exception was never retrieved" for peer errors
+            if "Task exception was never retrieved" in str(record.msg) and "Peer id invalid" in str(record.exc_info):
+                return False
+            return True
+    
+    # Apply filter to Pyrogram loggers
+    peer_filter = SuppressPeerErrors()
+    logging.getLogger("pyrogram.dispatcher").addFilter(peer_filter)
+    logging.getLogger("pyrogram.dispatcher").setLevel(WARNING)
+    logging.getLogger("pyrogram.connection.connection").setLevel(WARNING)
+    logging.getLogger("asyncio").addFilter(peer_filter)
+    
     logger = getLogger(__name__)
 
 if Config.API_ID is None:
@@ -46,57 +94,25 @@ if Config.STRING_SESSION is None:
     logger.info("STRING_SESSION is None. Bot Is Quiting")
     sys.exit(1)
 if Config.SUDO_USERS is None:
-    logger.info("STRING_SESSION is None. Bot Is Quiting")
+    logger.info("SUDO_USERS is None. Bot Is Quiting")
     sys.exit(1)
 
-async def is_sudo(event):
-    if str(event.sender_id) in Config.SUDO_USERS:
-        return True
-    else:
-        return False
+async def is_sudo(message):
+    """Check if user is sudo user - works with Pyrogram Message object"""
+    if hasattr(message, 'from_user') and message.from_user:
+        return str(message.from_user.id) in Config.SUDO_USERS
+    return False
 
-@bot.on(events.NewMessage(pattern=r'/cancel'))
-async def handler(event):
-    if not await is_sudo(event):
-        await event.respond("You are not authorized to use this Bot. Create your own.")
+@bot.on_message(filters.command("cancel"))
+async def cancel_handler(client, message):
+    if not await is_sudo(message):
+        await message.reply("You are not authorized to use this Bot. Create your own.")
         return
     try:
-        await event.respond('Cancelled and restarted.')
-        client.disconnect()
+        await message.reply('🔄 Cancelling current operation and restarting bot...')
+        # Give time for the message to be sent
+        await asyncio.sleep(1)
+        # Restart the bot process
         os.execl(sys.executable, sys.executable, *sys.argv)
-    except:
-        pass
-
-# Register default commands with BotFather
-async def register_commands():
-    commands = [
-        BotCommand(
-            command='forward',
-            description='Forward messages from one channel to another'
-        ),
-        BotCommand(
-            command='cancel',
-            description='Cancel ongoing forwarding process'
-        ),
-        BotCommand(
-            command='help',
-            description='Get help about using the bot'
-        ),
-        BotCommand(
-            command='status',
-            description='Check forwarding status'
-        )
-    ]
-    
-    try:
-        await bot(SetBotCommandsRequest(
-            scope=BotCommandScopeDefault(),
-            lang_code="en",
-            commands=commands
-        ))
-        logger.info("Bot commands registered successfully")
     except Exception as e:
-        logger.error(f"Failed to register commands: {e}")
-
-# Register commands when bot starts
-bot.loop.run_until_complete(register_commands())
+        await message.reply(f'❌ Error during restart: {str(e)}')

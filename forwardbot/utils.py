@@ -1,23 +1,24 @@
-from telethon import events
+from pyrogram import filters
 from forwardbot import bot
 from forwardbot.BotConfig import Config
 bothandler = Config.COMMAND_HAND_LER
+
 def forwardbot_cmd(add_cmd, is_args=False):
+    """Create a Pyrogram command filter"""
     def cmd(func):
-        if is_args:
-            pattern = bothandler + add_cmd + "(?: |$)(.*)"
-        else:
-            pattern = bothandler + add_cmd + "$"
-        bot.add_event_handler(
-            func, events.NewMessage(incoming=True, pattern=pattern)
-        )
+        # Pyrogram uses decorators, so we return the function with filter
+        # The actual registration happens in the plugin files
+        func._is_forwardbot_cmd = True
+        func._cmd = add_cmd
+        func._is_args = is_args
+        return func
     return cmd
 
-async def is_sudo(event):
-    if str(event.sender_id) in Config.SUDO_USERS:
-        return True
-    else:
-        return False
+async def is_sudo(message):
+    """Check if user is sudo user - works with Pyrogram Message object"""
+    if hasattr(message, 'from_user') and message.from_user:
+        return str(message.from_user.id) in Config.SUDO_USERS
+    return False
 
 def start_forwardbot(shortname):
     if shortname.startswith("__"):
