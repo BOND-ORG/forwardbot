@@ -1,7 +1,7 @@
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.errors import FloodWait
-from forwardbot import bot, client as user_client
+from forwardbot import bot, client as user_client, Config
 from forwardbot.utils import is_sudo
 from forwardbot.tool import *
 import asyncio
@@ -128,7 +128,9 @@ async def forward_handler(client, callback_query):
     else:
         return
     
-    if not await is_sudo(callback_query.message):
+    # Check authorization
+    user_id = callback_query.from_user.id if callback_query.from_user else None
+    if user_id is None or str(user_id) not in Config.SUDO_USERS:
         await callback_query.message.reply("You are not authorized to use this Bot. Create your own.")
         return
     if "1" in status:

@@ -1,7 +1,7 @@
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram.errors import FloodWait
-from forwardbot import bot, client, pending_conversations
+from forwardbot import bot, client, pending_conversations, Config
 from forwardbot.utils import is_sudo
 from forwardbot.tool import *
 import asyncio
@@ -122,6 +122,10 @@ async def autocopy_command(client_bot, message):
         if source_message.document:
             await m.edit("⬇️ Downloading document...")
             
+            # Set filename for progress callback
+            global current_file_name
+            current_file_name = source_message.document.file_name if source_message.document.file_name else "Document"
+            
             # Download the file with progress
             progress_message = m
             progress_start_time = None
@@ -178,6 +182,7 @@ ist = pytz.timezone('Asia/Kolkata')
 
 # Global variables for file progress tracking
 current_file_progress = {"downloaded": 0, "total": 0, "percentage": 0}
+current_file_name = "Unknown"
 progress_message = None
 progress_start_time = None
 last_progress_update = None
@@ -256,7 +261,7 @@ def split_file(file_path, chunk_size=SPLIT_CHUNK_SIZE):
 
 async def download_progress_callback(current, total):
     """Callback for download progress"""
-    global current_file_progress, progress_message, progress_start_time, last_progress_update
+    global current_file_progress, current_file_name, progress_message, progress_start_time, last_progress_update
     
     # Initialize start time on first call
     if progress_start_time is None:
@@ -306,6 +311,7 @@ async def download_progress_callback(current, total):
             progress_bar = create_progress_bar(percentage, 20)
             progress_text = f"""
 ⬇️ **Downloading File**
+📄 **{current_file_name}**
 
 {progress_bar} {percentage:.1f}%
 
@@ -322,7 +328,7 @@ async def download_progress_callback(current, total):
 
 async def upload_progress_callback(current, total):
     """Callback for upload progress"""
-    global current_file_progress, progress_message, progress_start_time, last_progress_update
+    global current_file_progress, current_file_name, progress_message, progress_start_time, last_progress_update
     
     # Reset start time for upload
     if current == 0 or progress_start_time is None:
@@ -372,6 +378,7 @@ async def upload_progress_callback(current, total):
             progress_bar = create_progress_bar(percentage, 20)
             progress_text = f"""
 ⬆️ **Uploading File**
+📄 **{current_file_name}**
 
 {progress_bar} {percentage:.1f}%
 
@@ -510,7 +517,7 @@ async def copy_command(bot_client, message):
 async def copy_handler(client, callback_query):
     """Handle copy button callbacks for protected channel copying"""
     
-    global MessageCount, start, last_message_id, progress_message, progress_start_time
+    global MessageCount, start, last_message_id, progress_message, progress_start_time, current_file_name
     
     # Determine type based on callback data
     if callback_query.data == 'copy_all':
@@ -528,7 +535,9 @@ async def copy_handler(client, callback_query):
     else:
         return
     
-    if not await is_sudo(callback_query.message):
+    # Check authorization
+    user_id = callback_query.from_user.id if callback_query.from_user else None
+    if user_id is None or str(user_id) not in Config.SUDO_USERS:
         await callback_query.message.reply("You are not authorized to use this Bot. Create your own.")
         return
     if "1" in status:
@@ -601,6 +610,9 @@ async def copy_handler(client, callback_query):
                 # Step 3: Download and upload the document
                 if source_message.document:
                     await m.edit("⬇️ Downloading document...")
+                    
+                    # Set filename for progress callback
+                    current_file_name = source_message.document.file_name if source_message.document.file_name else "Document"
                     
                     # Download the file with progress
                     progress_message = m
@@ -724,7 +736,8 @@ async def copy_handler(client, callback_query):
                                 # Update status - Downloading
                                 print(f"Downloading message {message.id}...")
                                 
-                                # Set global progress message for callbacks
+                                # Set global variables for progress callbacks
+                                current_file_name = file_name[:50]  # Limit filename length
                                 progress_message = m
                                 progress_start_time = None  # Reset for new download
                                 
