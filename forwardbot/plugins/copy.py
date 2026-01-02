@@ -142,10 +142,10 @@ async def autocopy_command(client_bot, message):
                 progress_start_time = None
                 
                 # Get caption
-                caption = source_message.caption if source_message.caption else ""
+                caption = current_file_name
                 
                 # Upload to destination
-                await client.send_document(
+                sent_message = await client.send_document(
                     tochat,
                     file_path,
                     caption=caption,
@@ -159,7 +159,31 @@ async def autocopy_command(client_bot, message):
                 except:
                     pass
                 
-                await m.edit("✅ Document copied successfully!")
+                # Get file size
+                file_size = source_message.document.file_size if source_message.document else 0
+                if file_size > 0:
+                    if file_size < 1024 * 1024:
+                        size_str = f"{file_size/1024:.2f} KB"
+                    else:
+                        size_str = f"{file_size/(1024*1024):.2f} MB"
+                else:
+                    size_str = "Unknown"
+                
+                # Get title
+                title = source_message.document.file_name if source_message.document and source_message.document.file_name else "Document"
+                
+                # Create channel link
+                channel_id = str(tochat).replace("-100", "")
+                message_link = f"https://t.me/c/{channel_id}/{sent_message.id}"
+                
+                success_msg = f"""✅ Document copied successfully!
+
+📹 {title}
+💾 Size: {size_str}
+
+🔗 Open in Channel ({message_link})"""
+                
+                await m.edit(success_msg)
             else:
                 await m.edit("❌ Failed to download the file.")
         else:
@@ -297,12 +321,10 @@ async def download_progress_callback(current, total):
     else:
         eta_str = f"{int(eta_seconds/3600)}h {int((eta_seconds%3600)/60)}m"
     
-    # Update message every 5 seconds or every 10% or if it's the first/last update
+    # Update message every 5 seconds or when complete
     current_time = time.time()
     should_update = (
         (current_time - last_progress_update >= 5) or 
-        (percentage % 10 < 1) or 
-        (percentage >= 99) or
         (current == total)
     )
     
@@ -364,12 +386,10 @@ async def upload_progress_callback(current, total):
     else:
         eta_str = f"{int(eta_seconds/3600)}h {int((eta_seconds%3600)/60)}m"
     
-    # Update message every 5 seconds or every 10% or if it's the first/last update
+    # Update message every 5 seconds or when complete
     current_time = time.time()
     should_update = (
         (current_time - last_progress_update >= 5) or 
-        (percentage % 10 < 1) or 
-        (percentage >= 99) or
         (current == total)
     )
     
@@ -630,10 +650,10 @@ async def copy_handler(client, callback_query):
                         progress_start_time = None
                         
                         # Get caption
-                        caption = source_message.caption if source_message.caption else ""
+                        caption = current_file_name
                         
                         # Upload to destination
-                        await user_client.send_document(
+                        sent_message = await user_client.send_document(
                             tochat,
                             file_path,
                             caption=caption,
@@ -647,7 +667,31 @@ async def copy_handler(client, callback_query):
                         except:
                             pass
                         
-                        await m.edit("✅ Document copied successfully!")
+                        # Get file size
+                        file_size = source_message.document.file_size if source_message.document else 0
+                        if file_size > 0:
+                            if file_size < 1024 * 1024:
+                                size_str = f"{file_size/1024:.2f} KB"
+                            else:
+                                size_str = f"{file_size/(1024*1024):.2f} MB"
+                        else:
+                            size_str = "Unknown"
+                        
+                        # Get title
+                        title = source_message.document.file_name if source_message.document and source_message.document.file_name else "Document"
+                        
+                        # Create channel link
+                        channel_id = str(tochat).replace("-100", "")
+                        message_link = f"https://t.me/c/{channel_id}/{sent_message.id}"
+                        
+                        success_msg = f"""✅ Document copied successfully!
+
+📹 {title}
+💾 Size: {size_str}
+
+🔗 Open in Channel ({message_link})"""
+                        
+                        await m.edit(success_msg)
                         MessageCount += 1
                         return
                     else:
@@ -804,9 +848,7 @@ async def copy_handler(client, callback_query):
                                             progress_start_time = None
                                             
                                             # Create caption for this part
-                                            part_caption = f"Part {part_num}/{num_parts}"
-                                            if caption:
-                                                part_caption = f"{caption}\n\n📦 Part {part_num}/{num_parts}"
+                                            part_caption = chunk_name
                                             
                                             # Create initial upload progress for this part
                                             initial_upload = f"""
@@ -877,42 +919,42 @@ async def copy_handler(client, callback_query):
                                             await client.send_document(
                                                 tochat, 
                                                 temp_file,
-                                                caption=caption,
+                                                caption=file_name,
                                                 progress=upload_progress_callback
                                             )
                                         elif media_type(message) == 'Video':
                                             await client.send_video(
                                                 tochat, 
                                                 temp_file,
-                                                caption=caption,
+                                                caption=file_name,
                                                 progress=upload_progress_callback
                                             )
                                         elif media_type(message) == 'Photo':
                                             await client.send_photo(
                                                 tochat, 
                                                 temp_file,
-                                                caption=caption,
+                                                caption=file_name,
                                                 progress=upload_progress_callback
                                             )
                                         elif media_type(message) == 'Audio':
                                             await client.send_audio(
                                                 tochat, 
                                                 temp_file,
-                                                caption=caption,
+                                                caption=file_name,
                                                 progress=upload_progress_callback
                                             )
                                         elif media_type(message) == 'Voice':
                                             await client.send_voice(
                                                 tochat, 
                                                 temp_file,
-                                                caption=caption,
+                                                caption=file_name,
                                                 progress=upload_progress_callback
                                             )
                                         else:
                                             await client.send_document(
                                                 tochat, 
                                                 temp_file,
-                                                caption=caption,
+                                                caption=file_name,
                                                 progress=upload_progress_callback
                                             )
                                         
@@ -956,9 +998,9 @@ async def copy_handler(client, callback_query):
                             count -= 1
                             MessageCount += 1
                             
-                            # Update status message every 3 seconds for more responsive updates
+                            # Update status message every 5 seconds for more responsive updates
                             current_time = datetime.datetime.now()
-                            if (current_time - last_status_update).total_seconds() >= 3:
+                            if (current_time - last_status_update).total_seconds() >= 5:
                                 status_message = await format_status_message(
                                     MessageCount, 
                                     start, 
@@ -1146,42 +1188,42 @@ async def copy_handler(client, callback_query):
                                             uploaded_msg = await user_client.send_document(
                                                 tochat, 
                                                 temp_file, 
-                                                caption=message.caption,
+                                                caption=file_name,
                                                 progress=upload_progress_callback
                                             )
                                         elif media_type(message) == 'Video':
                                             uploaded_msg = await user_client.send_video(
                                                 tochat, 
                                                 temp_file, 
-                                                caption=message.caption,
+                                                caption=file_name,
                                                 progress=upload_progress_callback
                                             )
                                         elif media_type(message) == 'Audio':
                                             uploaded_msg = await user_client.send_audio(
                                                 tochat, 
                                                 temp_file, 
-                                                caption=message.caption,
+                                                caption=file_name,
                                                 progress=upload_progress_callback
                                             )
                                         elif media_type(message) == 'Photo':
                                             uploaded_msg = await user_client.send_photo(
                                                 tochat, 
                                                 temp_file, 
-                                                caption=message.caption,
+                                                caption=file_name,
                                                 progress=upload_progress_callback
                                             )
                                         elif media_type(message) == 'Voice':
                                             uploaded_msg = await user_client.send_voice(
                                                 tochat, 
                                                 temp_file, 
-                                                caption=message.caption,
+                                                caption=file_name,
                                                 progress=upload_progress_callback
                                             )
                                         elif media_type(message) == 'Animation':
                                             uploaded_msg = await user_client.send_animation(
                                                 tochat, 
                                                 temp_file, 
-                                                caption=message.caption,
+                                                caption=file_name,
                                                 progress=upload_progress_callback
                                             )
                                         else:
@@ -1189,7 +1231,7 @@ async def copy_handler(client, callback_query):
                                             uploaded_msg = await user_client.send_document(
                                                 tochat, 
                                                 temp_file, 
-                                                caption=message.caption,
+                                                caption=file_name,
                                                 progress=upload_progress_callback
                                             )
                                         
