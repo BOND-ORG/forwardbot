@@ -167,11 +167,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 🙏 Credits
-
-- **Subinps** - For contributing to create this bot
-- **Sandy** - For sharing the media_type function from [CatUserBot](https://github.com/sandy1709/catuserbot)
-
 ## 📄 License
 
 [![GNU GPLv3 Image](https://www.gnu.org/graphics/gplv3-127x51.png)](http://www.gnu.org/licenses/gpl-3.0.en.html)
