@@ -6,6 +6,7 @@ class Config(object):
     STRING_SESSION = environ.get("STRING", None)
     SUDO_USERS = environ.get("SUDO_USERS", None)
     COMMAND_HAND_LER = environ.get("COMMAND_HAND_LER", "^/")
+    ENABLE_CAPTION = environ.get("ENABLE_CAPTION", "false").lower() == "true"
     HELP_MSG = """
 The Commands in the bot are:
 

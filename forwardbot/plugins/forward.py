@@ -217,9 +217,10 @@ async def forward_handler(client, callback_query):
                         if media_type(message) == type or type == 'All':
                             try:
                                 if media_type(message) == 'Document':
-                                    await user_client.send_document(tochat, message.document.file_id, caption=message.caption)
+                                    doc_name = getattr(message.document, 'file_name', 'Unknown')
+                                    caption = message.caption if Config.ENABLE_CAPTION else doc_name
+                                    await user_client.send_document(tochat, message.document.file_id, caption=caption)
                                     try:
-                                        doc_name = getattr(message.document, 'file_name', 'Unknown')
                                         if len(str(doc_name)) <= 95:
                                             print("Successfully forwarded: " + str(doc_name))
                                         else:
@@ -309,9 +310,10 @@ async def forward_handler(client, callback_query):
                         if media_type(message) == type or type == 'All':
                             try:
                                 if media_type(message) == 'Document':
-                                    await user_client.send_document(tochat, message.document.file_id, caption=message.caption)
+                                    doc_name = getattr(message.document, 'file_name', 'Unknown')
+                                    caption = message.caption if Config.ENABLE_CAPTION else doc_name
+                                    await user_client.send_document(tochat, message.document.file_id, caption=caption)
                                     try:
-                                        doc_name = getattr(message.document, 'file_name', 'Unknown')
                                         if len(str(doc_name)) <= 95:
                                             print("Successfully forwarded: " + str(doc_name))
                                         else:
