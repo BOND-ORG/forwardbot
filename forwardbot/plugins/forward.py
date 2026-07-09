@@ -195,13 +195,33 @@ async def forward_handler(client, callback_query):
         start = str(datetime.datetime.now())
         last_status_update = datetime.datetime.now()
 
+        # Get the highest message ID in the source channel
+        max_id = 0
+        try:
+            async for last_msg in user_client.get_chat_history(fromchat, limit=1):
+                max_id = last_msg.id
+            print(f"Max message ID in source channel: {max_id}")
+        except Exception as e:
+            print(f"Error fetching last message ID: {e}")
+
+        consecutive_empty = 0
+
         if offsetid == "0":
             message_id = 1
             while True:
+                if max_id > 0 and message_id > max_id:
+                    break
                 try:
                     message = await user_client.get_messages(fromchat, message_id)
-                    if not message:
-                        break
+                    if not message or message.empty:
+                        consecutive_empty += 1
+                        if consecutive_empty >= 100:
+                            print(f"Hit 100 consecutive empty messages. Breaking loop.")
+                            break
+                        message_id += 1
+                        continue
+                    else:
+                        consecutive_empty = 0
                 except:
                     break
                 # Process message here
@@ -209,7 +229,7 @@ async def forward_handler(client, callback_query):
                     status.add("3")
                     status.remove("1")
                     await m.edit(await format_status_message(MessageCount, start, "Completed ✅"))
-                    os.execl(sys.executable, sys.executable, *sys.argv)
+                    os._exit(0)
                     return
                 
                 if count:
@@ -266,7 +286,7 @@ async def forward_handler(client, callback_query):
                                 error_msg = f"Error occurred: {str(e)}"
                                 print(error_msg)
                                 await m.edit(f"{await format_status_message(MessageCount, start, 'Error ❌')}\n\n{error_msg}")
-                                os.execl(sys.executable, sys.executable, *sys.argv)
+                                os._exit(1)
                                 return
                     else:
                         print(f"You have sent {MessageCount} messages")
@@ -291,10 +311,19 @@ async def forward_handler(client, callback_query):
             # Start from the specified message ID and iterate forward
             message_id = int(offsetid)
             while True:
+                if max_id > 0 and message_id > max_id:
+                    break
                 try:
                     message = await user_client.get_messages(fromchat, message_id)
-                    if not message:
-                        break
+                    if not message or message.empty:
+                        consecutive_empty += 1
+                        if consecutive_empty >= 100:
+                            print(f"Hit 100 consecutive empty messages. Breaking loop.")
+                            break
+                        message_id += 1
+                        continue
+                    else:
+                        consecutive_empty = 0
                 except:
                     break
                 # Process message here
@@ -302,7 +331,7 @@ async def forward_handler(client, callback_query):
                     status.add("3")
                     status.remove("1")
                     await m.edit(await format_status_message(MessageCount, start, "Completed ✅"))
-                    os.execl(sys.executable, sys.executable, *sys.argv)
+                    os._exit(0)
                     return
                 
                 if count:
@@ -359,7 +388,7 @@ async def forward_handler(client, callback_query):
                                 error_msg = f"Error occurred: {str(e)}"
                                 print(error_msg)
                                 await m.edit(f"{await format_status_message(MessageCount, start, 'Error ❌')}\n\n{error_msg}")
-                                os.execl(sys.executable, sys.executable, *sys.argv)
+                                os._exit(1)
                                 return
                     else:
                         print(f"You have sent {MessageCount} messages")
@@ -380,11 +409,17 @@ async def forward_handler(client, callback_query):
                     await asyncio.sleep(sleep_time)
                     count = random.randint(468, 517)
                 message_id += 1
-        os.execl(sys.executable, sys.executable, *sys.argv)
+        status.add("3")
+        try:
+            status.remove("1")
+        except:
+            pass
+        await m.edit(await format_status_message(MessageCount, start, "Completed ✅"))
+        os._exit(0)
                 
     except Exception as e:
             error_msg = f"Error occurred: {str(e)}"
             print(error_msg)
             await m.edit(f"Error: {error_msg}")
-            os.execl(sys.executable, sys.executable, *sys.argv)
+            os._exit(1)
             return

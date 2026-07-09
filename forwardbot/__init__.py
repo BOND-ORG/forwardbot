@@ -112,7 +112,7 @@ async def cancel_handler(client, message):
         await message.reply('🔄 Cancelling current operation and restarting bot...')
         # Give time for the message to be sent
         await asyncio.sleep(1)
-        # Restart the bot process
-        os.execl(sys.executable, sys.executable, *sys.argv)
+        # Exit the process
+        os._exit(0)
     except Exception as e:
         await message.reply(f'❌ Error during restart: {str(e)}')
